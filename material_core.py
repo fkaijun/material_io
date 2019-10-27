@@ -104,6 +104,10 @@ def reference_material_file(ma_path):
     :return: namespace
     :rtype: str
     """
+    all_reference = cmds.file(q=True, reference=True)
+    if ma_path in all_reference:
+        cmds.file(ma_path, removeReference=True)
+
     file_name = os.path.splitext(os.path.basename(ma_path))[0]
     cmds.file(ma_path, reference=True, ignoreVersion=True,
               groupLocator=True, mergeNamespacesOnClash=False,
@@ -111,3 +115,25 @@ def reference_material_file(ma_path):
     namespace = cmds.referenceQuery(ma_path, namespace=True)
 
     return namespace.split(':')[-1]
+
+
+def give_material(ma_path, json_path, obj_namespace=None):
+    """
+    Give the selected object material
+    :param ma_path: material path
+    :param json_path: sg json path
+    :param obj_namespace: mesh object namespace
+    """
+    material_namespace = reference_material_file(ma_path)
+    sg_obj_sets = read_json(json_path)
+
+    for sg_name, mesh_objects in sg_obj_sets.items():
+        mesh_list_new = []
+        for mesh_object in mesh_objects:
+            if obj_namespace:
+                mesh_object = '{0}:{1}'.format(obj_namespace, mesh_object)
+            if not cmds.objExists(mesh_object):
+                continue
+            mesh_list_new.append(mesh_object)
+
+        cmds.sets(mesh_list_new, fe='{0}:{1}'.format(material_namespace, sg_name), e=True)
