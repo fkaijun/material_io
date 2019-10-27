@@ -95,3 +95,19 @@ def export_material_file(ma_path, json_path=None):
         return True
     else:
         return False
+
+
+def reference_material_file(ma_path):
+    """
+    import materials and return namespace
+    :param ma_path: materials path
+    :return: namespace
+    :rtype: str
+    """
+    file_name = os.path.splitext(os.path.basename(ma_path))[0]
+    cmds.file(ma_path, reference=True, ignoreVersion=True,
+              groupLocator=True, mergeNamespacesOnClash=False,
+              options="v=0;", namespace=file_name)
+    namespace = cmds.referenceQuery(ma_path, namespace=True)
+
+    return namespace.split(':')[-1]
