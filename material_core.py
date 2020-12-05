@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-# ================================
-# @Time    : 2019/10/26 23:00
-# @Author  : KaiJun Fan
-# @Email   : qq826530928@163.com
-# ================================
+
 import json
 import os
 
@@ -48,7 +44,10 @@ def get_select_object_sg():
     sg_nodes = list(set(sg_nodes))
 
     # remove maya default ShadingGroup
-    sg_nodes.remove('initialShadingGroup')
+    try:
+        sg_nodes.remove('initialShadingGroup')
+    except ValueError:
+        pass
 
     return sg_nodes
 
@@ -78,25 +77,6 @@ def get_sg_connect_obj():
     return sg_obj_sets
 
 
-def export_material_file(ma_path, json_path=None):
-    """
-    Export material file and SG-associated object collection information
-    :param ma_path: export material file path
-    :param json_path: Store connection information between sg nodes and objects
-    """
-    sg_obj_sets = get_sg_connect_obj()
-
-    if sg_obj_sets:
-        cmds.select(sg_obj_sets.keys(), r=True, ne=True)
-        cmds.file(ma_path, op='v=0;', typ='mayaAscii', pr=1, es=1)
-        if not json_path:
-            json_path = ma_path.replace('.ma', '.json')
-        write_json(json_path, sg_obj_sets)
-        return True
-    else:
-        return False
-
-
 def reference_material_file(ma_path):
     """
     import materials and return namespace
@@ -117,7 +97,26 @@ def reference_material_file(ma_path):
     return namespace.split(':')[-1]
 
 
-def give_material(ma_path, json_path, obj_namespace=None):
+def export_material(ma_path, json_path=None):
+    """
+    Export material file and SG-associated object collection information
+    :param ma_path: export material file path
+    :param json_path: Store connection information between sg nodes and objects
+    """
+    sg_obj_sets = get_sg_connect_obj()
+
+    if sg_obj_sets:
+        cmds.select(sg_obj_sets.keys(), r=True, ne=True)
+        cmds.file(ma_path, op='v=0;', typ='mayaAscii', pr=1, es=1)
+        if not json_path:
+            json_path = ma_path.replace('.ma', '.json')
+        write_json(json_path, sg_obj_sets)
+        return True
+    else:
+        return False
+
+
+def give_material(ma_path, json_path=None, obj_namespace=None):
     """
     Give the selected object material
     :param ma_path: material path
@@ -125,6 +124,8 @@ def give_material(ma_path, json_path, obj_namespace=None):
     :param obj_namespace: mesh object namespace
     """
     material_namespace = reference_material_file(ma_path)
+    if not json_path:
+            json_path = ma_path.replace('.ma', '.json')
     sg_obj_sets = read_json(json_path)
 
     for sg_name, mesh_objects in sg_obj_sets.items():

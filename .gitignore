@@ -9,3 +9,7 @@
 #- pyCharm project file -+
 
 *.idea
+
+#- Vscode project file -+
+
+*.vscode
